@@ -5,6 +5,7 @@ import (
 	"go_rpc_demo/global"
 	"net"
 	"net/rpc"
+	"net/rpc/jsonrpc"
 )
 
 type HelloService struct {
@@ -33,7 +34,7 @@ func main() {
 		if err != nil {
 			panic("listener.Accept():" + err.Error())
 		}
-		go rpc.ServeConn(conn)
+		go jsonrpc.ServeConn(conn)
 	}
 
 }
