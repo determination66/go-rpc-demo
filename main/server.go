@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 	"go_rpc_demo/global"
-	"io"
-	"net/http"
+	"go_rpc_demo/handler"
+	"net"
 	"net/rpc"
-	"net/rpc/jsonrpc"
 )
 
 type HelloService struct {
@@ -20,25 +19,24 @@ func (h *HelloService) Hello(p *global.Person, res *global.Res) error {
 }
 
 func main() {
-	err := rpc.RegisterName("HelloService", &HelloService{})
+	// 实例化server
+	listener, err := net.Listen("tcp", ":6666")
 	if err != nil {
-		panic("rpc.RegisterName:" + err.Error())
+		panic("net listen err")
+	}
+	// 注册handler逻辑
+	err = rpc.RegisterName(handler.HelloServiceName, &HelloService{})
+	if err != nil {
+		panic("rpc register failed!")
 	}
 
-	http.HandleFunc("/jsonrpc", func(w http.ResponseWriter, r *http.Request) {
-		var conn io.ReadWriteCloser = struct {
-			io.Writer
-			io.ReadCloser
-		}{
-			ReadCloser: r.Body,
-			Writer:     w,
-		}
-		err := rpc.ServeRequest(jsonrpc.NewServerCodec(conn))
+	for {
+		// 启动服务
+		conn, err := listener.Accept()
 		if err != nil {
-			panic("rpc.ServeRequest" + err.Error())
+			panic("accept err")
 		}
-	})
-
-	_ = http.ListenAndServe(":6666", nil)
+		go rpc.ServeConn(conn)
+	}
 
 }

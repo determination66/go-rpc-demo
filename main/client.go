@@ -3,32 +3,27 @@ package main
 import (
 	"fmt"
 	"go_rpc_demo/global"
-	"net"
+	"go_rpc_demo/handler"
 	"net/rpc"
-	"net/rpc/jsonrpc"
 )
 
 func main() {
-	conn, err := net.Dial("tcp", "localhost:6666")
+	client, err := rpc.Dial("tcp", "localhost:6666")
 	if err != nil {
-		panic("net.Dial:" + err.Error())
+		panic("rpc Dial failed")
 	}
-	defer conn.Close()
 
-	client := rpc.NewClientWithCodec(jsonrpc.NewClientCodec(conn))
+	defer client.Close()
 
 	var res global.Res
-
 	var p = global.Person{
-		Name: "张三",
-		Age:  22,
+		Name: "dcl",
+		Age:  21,
 	}
-
-	err = client.Call("HelloService.Hello", &p, &res)
+	err = client.Call(handler.HelloServiceName+".Hello", &p, &res)
 	if err != nil {
-		panic("conn.Call:" + err.Error())
+		panic("调用失败" + err.Error())
 	}
-
 	fmt.Println(res)
 
 }
