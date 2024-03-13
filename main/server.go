@@ -1,22 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"go_rpc_demo/global"
 	"go_rpc_demo/handler"
+	"go_rpc_demo/server_proxy"
 	"net"
 	"net/rpc"
 )
-
-type HelloService struct {
-}
-
-func (h *HelloService) Hello(p *global.Person, res *global.Res) error {
-	res.Code = 200
-	res.Msg = "hello," + p.Name
-	fmt.Println(p)
-	return nil
-}
 
 func main() {
 	// 实例化server
@@ -25,9 +14,9 @@ func main() {
 		panic("net listen err")
 	}
 	// 注册handler逻辑
-	err = rpc.RegisterName(handler.HelloServiceName, &HelloService{})
+	err = server_proxy.RegisterHelloService(&handler.HelloService{})
 	if err != nil {
-		panic("rpc register failed!")
+		panic("server_proxy.RegisterHelloService failed!")
 	}
 
 	for {
