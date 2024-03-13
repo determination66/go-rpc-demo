@@ -7,22 +7,24 @@ import (
 )
 
 func main() {
-	client, err := rpc.Dial("tcp", "localhost:6666")
+	conn, err := rpc.Dial("tcp", "localhost:6666")
 	if err != nil {
-		panic("rpc Dial failed")
+		panic("net.Dial:" + err.Error())
 	}
-
-	defer client.Close()
+	defer conn.Close()
 
 	var res global.Res
+
 	var p = global.Person{
-		Name: "dcl",
-		Age:  21,
+		Name: "张三",
+		Age:  22,
 	}
-	err = client.Call("HelloService.Hello", &p, &res)
+
+	err = conn.Call("HelloService.Hello", &p, &res)
 	if err != nil {
-		panic("调用失败" + err.Error())
+		panic("conn.Call:" + err.Error())
 	}
+
 	fmt.Println(res)
 
 }
