@@ -1,34 +1,80 @@
 package main
 
 import (
-	"context"
-	"go_rpc_demo/protoc/hello_world"
+	"fmt"
+	"go_rpc_demo/protoc/stream"
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"sync"
+	"time"
 )
 
-type Server struct {
-	hello_world.GreeterServer
+type server struct {
+	stream.GreeterServer
 }
 
-//SayHello(context.Context, *HelloRequest) (*HelloReply, error)
+// 服务端 单向流
+func (s *server) GetStream(req *stream.StreamReqData, res stream.Greeter_GetStreamServer) error {
+	i := 0
+	for {
+		i++
+		res.Send(&stream.StreamResData{Data: fmt.Sprintf("%v", time.Now().Unix())})
+		time.Sleep(1 * time.Second)
+		if i > 10 {
+			break
+		}
+	}
+	return nil
+}
 
-// SayHello proto可以生成go语言
-func (s *Server) SayHello(ctx context.Context, request *hello_world.HelloRequest) (
-	reply *hello_world.HelloReply, err error) {
-	return &hello_world.HelloReply{
-		Message: "hello," + request.Name,
-	}, nil
+// 客户端 单向流
+func (s *server) PutStream(cliStr stream.Greeter_PutStreamServer) error {
+
+	for {
+		if tem, err := cliStr.Recv(); err == nil {
+			log.Println(tem)
+		} else {
+			log.Println("break, err :", err)
+			break
+		}
+	}
+
+	return nil
+}
+
+// 客户端服务端 双向流
+func (s *server) AllStream(allStr stream.Greeter_AllStreamServer) error {
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		for {
+			data, _ := allStr.Recv()
+			log.Println(data.Data)
+		}
+		wg.Done()
+	}()
+
+	go func() {
+		for {
+			allStr.Send(&stream.StreamResData{Data: "ssss"})
+			time.Sleep(time.Second)
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+	return nil
 }
 
 func main() {
 	grpcServer := grpc.NewServer()
 
-	hello_world.RegisterGreeterServer(grpcServer, &Server{})
+	stream.RegisterGreeterServer(grpcServer, &server{})
 
 	// 监听 gRPC 服务器
-	listen, err := net.Listen("tcp", ":50051")
+	listen, err := net.Listen("tcp", ":50052")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

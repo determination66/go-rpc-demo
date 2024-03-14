@@ -2,28 +2,66 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"go_rpc_demo/protoc/hello_world"
+	"go_rpc_demo/protoc/stream"
 	"google.golang.org/grpc"
 	"log"
+	"time"
+)
+
+const (
+	ADDRESS = "localhost:50052"
 )
 
 func main() {
-	// 连接 gRPC 服务器
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	//通过grpc 库 建立一个连接
+	conn, err := grpc.Dial(ADDRESS, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("failed to connect: %v", err)
+		return
 	}
 	defer conn.Close()
-	// 创建 Greeter 客户端
-	client := hello_world.NewGreeterClient(conn)
-
-	// 调用 SayHello 方法
-	resp, err := client.SayHello(context.Background(), &hello_world.HelloRequest{Name: "Alice"})
+	//通过刚刚的连接 生成一个client对象。
+	c := stream.NewGreeterClient(conn)
+	//调用服务端推送流
+	reqstreamData := &stream.StreamReqData{Data: "aaa"}
+	res, err := c.GetStream(context.Background(), reqstreamData)
 	if err != nil {
-		log.Fatalf("failed to call SayHello: %v", err)
+		panic("err:" + err.Error())
 	}
+	for {
+		aa, err := res.Recv()
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		log.Println(aa)
+	}
+	//客户端 推送 流
+	putRes, _ := c.PutStream(context.Background())
+	i := 1
+	for {
+		i++
+		putRes.Send(&stream.StreamResData{Data: "ss"})
+		time.Sleep(time.Second)
+		if i > 10 {
+			break
+		}
+	}
+	//服务端 客户端 双向流
+	allStr, _ := c.AllStream(context.Background())
+	go func() {
+		for {
+			data, _ := allStr.Recv()
+			log.Println(data)
+		}
+	}()
 
-	// 打印响应
-	fmt.Println("Response:", resp.Message)
+	go func() {
+		for {
+			allStr.Send(&stream.StreamReqData{Data: "ssss"})
+			time.Sleep(time.Second)
+		}
+	}()
+
+	select {}
+
 }
