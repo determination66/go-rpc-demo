@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "./;hello_world";
+
+// service
+service Greeter {
+  // SayHello接口
+  rpc SayHello (HelloRequest) returns (HelloReply);
+}
+
+message HelloRequest {
+  string name = 1;//编号是1
+  int32 age =2;
+  repeated string courses =3;
+}
+
+message HelloReply {
+  string message = 1;
+}
+
