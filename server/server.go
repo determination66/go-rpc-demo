@@ -1,77 +1,35 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"go_rpc_demo/protoc/stream"
+	"go_rpc_demo/protoc/hello_world"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"sync"
 	"time"
 )
 
 type server struct {
-	stream.GreeterServer
+	hello_world.UnimplementedGreeterServer
 }
 
-// 服务端 单向流
-func (s *server) GetStream(req *stream.StreamReqData, res stream.Greeter_GetStreamServer) error {
-	i := 0
-	for {
-		i++
-		res.Send(&stream.StreamResData{Data: fmt.Sprintf("%v", time.Now().Unix())})
-		time.Sleep(1 * time.Second)
-		if i > 10 {
-			break
-		}
-	}
-	return nil
-}
+func (s *server) SayHello(ctx context.Context, req *hello_world.HelloRequest) (*hello_world.HelloReply, error) {
+	fmt.Println("成功SayHello")
 
-// 客户端 单向流
-func (s *server) PutStream(cliStr stream.Greeter_PutStreamServer) error {
+	time.Sleep(4 * time.Second)
 
-	for {
-		if tem, err := cliStr.Recv(); err == nil {
-			log.Println(tem)
-		} else {
-			log.Println("break, err :", err)
-			break
-		}
+	reply := &hello_world.HelloReply{
+		Message: "hello," + req.Name,
 	}
 
-	return nil
-}
-
-// 客户端服务端 双向流
-func (s *server) AllStream(allStr stream.Greeter_AllStreamServer) error {
-
-	wg := sync.WaitGroup{}
-	wg.Add(2)
-	go func() {
-		for {
-			data, _ := allStr.Recv()
-			log.Println(data.Data)
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		for {
-			allStr.Send(&stream.StreamResData{Data: "ssss"})
-			time.Sleep(time.Second)
-		}
-		wg.Done()
-	}()
-
-	wg.Wait()
-	return nil
+	return reply, nil
 }
 
 func main() {
 	grpcServer := grpc.NewServer()
 
-	stream.RegisterGreeterServer(grpcServer, &server{})
+	hello_world.RegisterGreeterServer(grpcServer, &server{})
 
 	// 监听 gRPC 服务器
 	listen, err := net.Listen("tcp", ":50052")

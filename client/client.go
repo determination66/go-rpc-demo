@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"go_rpc_demo/protoc/stream"
+	"fmt"
+	"go_rpc_demo/protoc/hello_world"
 	"google.golang.org/grpc"
-	"log"
 	"time"
 )
 
@@ -20,48 +20,23 @@ func main() {
 	}
 	defer conn.Close()
 	//通过刚刚的连接 生成一个client对象。
-	c := stream.NewGreeterClient(conn)
+	c := hello_world.NewGreeterClient(conn)
 	//调用服务端推送流
-	reqstreamData := &stream.StreamReqData{Data: "aaa"}
-	res, err := c.GetStream(context.Background(), reqstreamData)
+	//reqstreamData := &stream.StreamReqData{Data: "aaa"}
+	helloReq := &hello_world.HelloRequest{
+		Name:    "张三",
+		Age:     16,
+		Courses: []string{"gin", "go", "protobuf"},
+		Sex:     hello_world.Sex_Male,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	res, err := c.SayHello(ctx, helloReq)
 	if err != nil {
 		panic("err:" + err.Error())
 	}
-	for {
-		aa, err := res.Recv()
-		if err != nil {
-			log.Println(err)
-			break
-		}
-		log.Println(aa)
-	}
-	//客户端 推送 流
-	putRes, _ := c.PutStream(context.Background())
-	i := 1
-	for {
-		i++
-		putRes.Send(&stream.StreamResData{Data: "ss"})
-		time.Sleep(time.Second)
-		if i > 10 {
-			break
-		}
-	}
-	//服务端 客户端 双向流
-	allStr, _ := c.AllStream(context.Background())
-	go func() {
-		for {
-			data, _ := allStr.Recv()
-			log.Println(data)
-		}
-	}()
 
-	go func() {
-		for {
-			allStr.Send(&stream.StreamReqData{Data: "ssss"})
-			time.Sleep(time.Second)
-		}
-	}()
-
-	select {}
+	fmt.Println(res)
+	cancel()
 
 }
