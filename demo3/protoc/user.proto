@@ -1,0 +1,9 @@
+syntax ="proto3";
+option go_package ="./;protoc";
+
+message User{
+  string name =1;
+  string message =2;
+  int32 number =3;
+  repeated string books =4;
+}
