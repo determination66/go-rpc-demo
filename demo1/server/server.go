@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"go_rpc_demo/protoc/hello_world"
+	hello_world2 "go_rpc_demo/demo1/protoc/hello_world"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -11,15 +11,15 @@ import (
 )
 
 type server struct {
-	hello_world.UnimplementedGreeterServer
+	hello_world2.UnimplementedGreeterServer
 }
 
-func (s *server) SayHello(ctx context.Context, req *hello_world.HelloRequest) (*hello_world.HelloReply, error) {
+func (s *server) SayHello(ctx context.Context, req *hello_world2.HelloRequest) (*hello_world2.HelloReply, error) {
 	fmt.Println("成功SayHello")
 
 	time.Sleep(4 * time.Second)
 
-	reply := &hello_world.HelloReply{
+	reply := &hello_world2.HelloReply{
 		Message: "hello," + req.Name,
 	}
 
@@ -29,7 +29,7 @@ func (s *server) SayHello(ctx context.Context, req *hello_world.HelloRequest) (*
 func main() {
 	grpcServer := grpc.NewServer()
 
-	hello_world.RegisterGreeterServer(grpcServer, &server{})
+	hello_world2.RegisterGreeterServer(grpcServer, &server{})
 
 	// 监听 gRPC 服务器
 	listen, err := net.Listen("tcp", ":50052")

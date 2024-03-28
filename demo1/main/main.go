@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"go_rpc_demo/protoc/hello_world"
+	"go_rpc_demo/demo1/protoc/hello_world"
 	"google.golang.org/protobuf/proto"
 )
 

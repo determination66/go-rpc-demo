@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"go_rpc_demo/protoc/hello_world"
+	hello_world2 "go_rpc_demo/demo1/protoc/hello_world"
 	"google.golang.org/grpc"
 	"time"
 )
@@ -20,14 +20,14 @@ func main() {
 	}
 	defer conn.Close()
 	//通过刚刚的连接 生成一个client对象。
-	c := hello_world.NewGreeterClient(conn)
+	c := hello_world2.NewGreeterClient(conn)
 	//调用服务端推送流
 	//reqstreamData := &stream.StreamReqData{Data: "aaa"}
-	helloReq := &hello_world.HelloRequest{
+	helloReq := &hello_world2.HelloRequest{
 		Name:    "张三",
 		Age:     16,
 		Courses: []string{"gin", "go", "protobuf"},
-		Sex:     hello_world.Sex_Male,
+		Sex:     hello_world2.Sex_Male,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
